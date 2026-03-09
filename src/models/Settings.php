@@ -28,8 +28,8 @@ class Settings extends Model
     protected function defineRules(): array
     {
         return [
-            [['openaiApiKey', 'openaiModel', 'botName', 'welcomeMessage'], 'string'],
-            // Add more specific validations if necessary
+            [['openaiApiKey', 'openaiModel', 'botName', 'welcomeMessage', 'chatSide', 'defaultLanguage', 'colorChatBubbleAI', 'colorChatBubbleUser', 'colorBackground'], 'string'],
+            [['searchSections', 'feedSections', 'feedCategories'], 'safe'],
         ];
     }
 }

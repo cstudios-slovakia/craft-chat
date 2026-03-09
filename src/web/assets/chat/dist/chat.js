@@ -16,20 +16,42 @@ document.addEventListener('alpine:init', () => {
         csrfTokenName: config.csrfTokenName,
 
         init() {
-            // Check storage for existing conversation session if desired
             const storedChat = sessionStorage.getItem('craftChatConvId');
             if (storedChat) {
                 this.conversationId = parseInt(storedChat);
                 this.hasActiveChat = true;
-                // Currently, we just reset messages visibly, could load history here via API in future.
-                this.messages = [{ role: 'assistant', content: this.welcomeMsg }];
+                const storedMessages = sessionStorage.getItem('craftChatMessages');
+                if (storedMessages) {
+                    this.messages = JSON.parse(storedMessages);
+                } else {
+                    this.messages = [{ role: 'assistant', content: this.welcomeMsg }];
+                }
             } else {
                 this.messages = [{ role: 'assistant', content: this.welcomeMsg }];
+                this.saveMessages();
             }
+
+            if (sessionStorage.getItem('craftChatIsOpen') === 'true') {
+                // To avoid transition flicker on load if it was open, we can just set it
+                this.isOpen = true;
+            }
+            if (sessionStorage.getItem('craftChatAutoNav') === 'true') {
+                this.autoNavigate = true;
+            }
+
+            // Watch for changes on autoNavigate to save it
+            this.$watch('autoNavigate', value => {
+                sessionStorage.setItem('craftChatAutoNav', value);
+            });
+        },
+
+        saveMessages() {
+            sessionStorage.setItem('craftChatMessages', JSON.stringify(this.messages));
         },
 
         openChat() {
             this.isOpen = true;
+            sessionStorage.setItem('craftChatIsOpen', 'true');
             if (!this.conversationId) {
                 this.startConversation();
             }
@@ -38,6 +60,7 @@ document.addEventListener('alpine:init', () => {
 
         closeChat() {
             this.isOpen = false;
+            sessionStorage.setItem('craftChatIsOpen', 'false');
         },
 
         toggleFullscreen() {
@@ -74,6 +97,7 @@ document.addEventListener('alpine:init', () => {
 
             const userMsg = this.newMessage.trim();
             this.messages.push({ role: 'user', content: userMsg });
+            this.saveMessages();
             this.newMessage = '';
             this.isLoading = true;
             this.scrollToBottom();
@@ -97,9 +121,11 @@ document.addEventListener('alpine:init', () => {
 
                 if (data.success) {
                     this.messages.push({ role: 'assistant', content: data.response });
+                    this.saveMessages();
                     this.checkForLinks(data.response);
                 } else {
                     this.messages.push({ role: 'assistant', content: "Sorry, an error occurred." });
+                    this.saveMessages();
                 }
             } catch (err) {
                 console.error(err);

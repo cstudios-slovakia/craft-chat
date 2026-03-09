@@ -231,19 +231,4 @@
     </div>
 </div>
 
-{# Initialize Alpine tabs #}
-{% block settingsTabs %}
-    <div class="pane-tabs">
-        <div role="tablist" aria-label="Settings Tabs">
-            {% for id, tab in settingTabs %}
-                <a href="#" 
-                   :class="{ 'sel': activeTab === '{{ id }}' }" 
-                   @click.prevent="activeTab = '{{ id }}'" 
-                   role="tab" 
-                   :aria-selected="activeTab === '{{ id }}' ? 'true' : 'false'">
-                    <span class="tab-label">{{ tab.label }}</span>
-                </a>
-            {% endfor %}
-        </div>
-    </div>
-{% endblock %}
+

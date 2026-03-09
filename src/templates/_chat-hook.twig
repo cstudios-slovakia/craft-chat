@@ -10,6 +10,8 @@
 {% set userColor = (settings.colorChatBubbleUser ?: '3B82F6')|replace({'#': ''}) %}
 {% set bgColor = (settings.colorBackground ?: 'FFFFFF')|replace({'#': ''}) %}
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <div 
     x-data="craftChat({
         botName: '{{ botName|escape('js') }}',

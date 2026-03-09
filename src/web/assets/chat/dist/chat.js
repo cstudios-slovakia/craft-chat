@@ -150,29 +150,33 @@ document.addEventListener('alpine:init', () => {
         },
 
         formatMessage(text) {
-            // First, protect basic HTML to prevent injection
-            let formatted = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            if (typeof marked !== 'undefined') {
+                // Configure marked to break on single newlines
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true
+                });
 
-            // Convert markdown style links to stylized HTML cards
-            const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-            formatted = formatted.replace(linkRegex, (fullMatch, textContent, url) => {
-                return `<a href="${url}" target="_blank" class="craft-chat-card">
-                    <span class="craft-chat-card-title">${textContent} <small>↗</small></span>
-                    <span class="craft-chat-card-desc">${url}</span>
-                </a>`;
-            });
+                // Parse the markdown string into HTML
+                let formatted = marked.parse(text);
 
-            // Parse Bold (**text** or __text__)
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>');
+                // Re-apply our custom link card formatting
+                // Marked compiles links to <a href="...">text</a>
+                const linkRegex = /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1(?:[^>]*?)?>(.*?)<\/a>/gi;
+                formatted = formatted.replace(linkRegex, (fullMatch, quote, url, textContent) => {
+                    return `<a href="${url}" target="_blank" class="craft-chat-card">
+                        <span class="craft-chat-card-title">${textContent} <small>↗</small></span>
+                        <span class="craft-chat-card-desc">${url}</span>
+                    </a>`;
+                });
 
-            // Parse Italic (*text* or _text_)
-            // Negative lookbehinds are avoid matching the insides of already-parsed bold tags
-            formatted = formatted.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
-            formatted = formatted.replace(/(?<!\_)\_(?!\_)(.*?)(?<!\_)\_(?!\_)/g, '<em>$1</em>');
+                // Wrap the rendered content in a clean div block to prevent extra spacing issues from <p> tags
+                return formatted;
+            }
 
-            // Preserve newlines
-            return formatted.replace(/\n/g, '<br>');
+            // Fallback if marked isn't loaded: just preserve newlines to prevent totally broken UX
+            let fallback = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return fallback.replace(/\n/g, '<br>');
         },
 
         scrollToBottom() {

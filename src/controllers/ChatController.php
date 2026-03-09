@@ -12,8 +12,12 @@ class ChatController extends Controller
     // Important: false means anonymous users can hit these endpoints
     protected array|int|bool $allowAnonymous = true;
 
-    // Remove CSRF validation for external AJAX.
-    public $enableCsrfValidation = false;
+    public function beforeAction($action): bool
+    {
+        // Disable CSRF for external API calls, since we manage it via JS body
+        $this->enableCsrfValidation = false;
+        return parent::beforeAction($action);
+    }
 
     public function actionStart()
     {

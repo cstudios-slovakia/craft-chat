@@ -13,7 +13,7 @@ class ChatController extends Controller
     protected array|int|bool $allowAnonymous = true;
 
     // Remove CSRF validation for external AJAX.
-    public bool $enableCsrfValidation = false;
+    public $enableCsrfValidation = false;
 
     public function actionStart()
     {

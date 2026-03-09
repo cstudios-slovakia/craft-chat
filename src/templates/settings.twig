@@ -16,6 +16,12 @@
     .chat-plugin-settings-wrapper > div:not(.pane-tabs) {
         padding: 0 24px;
     }
+    
+    /* Hotfix: Hide any randomly cloned tabs rendering outside our intended wrapper (Craft CMS artifact) */
+    .chat-plugin-settings-wrapper ~ .pane-tabs,
+    #content > .pane-tabs {
+        display: none !important;
+    }
 </style>
 
 {% set settingTabs = {

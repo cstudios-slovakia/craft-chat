@@ -23,6 +23,12 @@
     <!-- Chat Blob (Closed State) -->
     <button 
         x-show="!isOpen"
+        x-transition:enter="transition ease-out duration-300 transform"
+        x-transition:enter-start="opacity-0 scale-50"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-50"
         @click="openChat()"
         class="craft-chat-blob"
         style="background-color: {{ userColor }};"
@@ -39,6 +45,12 @@
     <div 
         x-show="isOpen"
         x-cloak
+        x-transition:enter="transition ease-out duration-300 origin-bottom-right transform"
+        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200 origin-bottom-right transform"
+        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
         style="background-color: {{ bgColor }};"
         :class="{ 'craft-chat-window': true, 'craft-chat-fullscreen': isFullscreen }"
     >

@@ -96,11 +96,11 @@
 <h3>Content Feed</h3>
 <p class="textline">Select which sections to use as context for the chatbot to answer from.</p>
 
-{# We would dynamically fetch the Sections and Categories here if needed #}
-{{ forms.textField({
-    label: "Sections Handle List (comma separated)"|t('craft-chat'),
-    instructions: "E.g., news, pages, blog"|t('craft-chat'),
+{{ forms.checkboxSelectField({
+    label: "Sections to Search"|t('craft-chat'),
+    instructions: "Check which sections the chatbot should use as context."|t('craft-chat'),
     id: 'searchSections',
     name: 'searchSections',
-    value: settings.searchSections is iterable ? settings.searchSections|join(',') : settings.searchSections,
+    options: sectionOptions,
+    values: settings.searchSections is iterable ? settings.searchSections : (settings.searchSections ? settings.searchSections|split(',') : []),
 }) }}

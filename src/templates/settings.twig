@@ -1,106 +1,222 @@
 {% import "_includes/forms" as forms %}
 
-{{ forms.textField({
-    first: true,
-    label: "OpenAI API Key"|t('craft-chat'),
-    instructions: "Your secret key for the OpenAI API."|t('craft-chat'),
-    id: 'openaiApiKey',
-    name: 'openaiApiKey',
-    value: settings.openaiApiKey,
-    required: true,
-}) }}
+{% do view.registerJsFile('https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js', {'defer': true}) %}
 
-{{ forms.selectField({
-    label: "OpenAI Model"|t('craft-chat'),
-    instructions: "Which model to use for chat functionality."|t('craft-chat'),
-    id: 'openaiModel',
-    name: 'openaiModel',
-    options: [
-        { label: 'GPT-5.2', value: 'gpt-5.2' },
-        { label: 'GPT-4o', value: 'gpt-4o' },
-        { label: 'GPT-4o-mini', value: 'gpt-4o-mini' }
-    ],
-    value: settings.openaiModel,
-}) }}
+{% set tabs = {
+    personalisation: { label: "Personalisation"|t('craft-chat'), url: '#personalisation' },
+    data: { label: "Data Sources & Instructions"|t('craft-chat'), url: '#data' },
+    api: { label: "Key & Model"|t('craft-chat'), url: '#api' }
+} %}
 
-{{ forms.textField({
-    label: "Bot Name"|t('craft-chat'),
-    instructions: "The name of the chatbot displayed to users."|t('craft-chat'),
-    id: 'botName',
-    name: 'botName',
-    value: settings.botName,
-}) }}
+{{ block('settingsTabs') }}
 
-{{ forms.textareaField({
-    label: "Welcome Message"|t('craft-chat'),
-    instructions: "The first message the bot sends when the chat is opened."|t('craft-chat'),
-    id: 'welcomeMessage',
-    name: 'welcomeMessage',
-    value: settings.welcomeMessage,
-}) }}
+<div id="settings-content" x-data="{
+    botName: '{{ settings.botName|escape('js') }}',
+    welcomeMsg: '{{ settings.welcomeMessage|escape('js') }}',
+    chatSide: '{{ settings.chatSide|escape('js') }}',
+    aiColor: '{{ settings.colorChatBubbleAI|escape('js') }}' || '#e5e7eb',
+    userColor: '{{ settings.colorChatBubbleUser|escape('js') }}' || '#3b82f6',
+    bgColor: '{{ settings.colorBackground|escape('js') }}' || '#ffffff'
+}">
 
-{{ forms.textareaField({
-    label: "Initial Instructions"|t('craft-chat'),
-    instructions: "System prompt instructions for the AI behavior."|t('craft-chat'),
-    id: 'initialInstructions',
-    name: 'initialInstructions',
-    value: settings.initialInstructions,
-    rows: 4
-}) }}
+    {# ---------------- TAB 1: PERSONALISATION ---------------- #}
+    <div id="personalisation" class="hidden">
+        <div style="display: flex; gap: 40px; align-items: flex-start;">
+            
+            <!-- Left Side: Form Inputs -->
+            <div style="flex: 1;">
+                {{ forms.textField({
+                    label: "Bot Name"|t('craft-chat'),
+                    instructions: "The name of the chatbot displayed to users."|t('craft-chat'),
+                    id: 'botName',
+                    name: 'botName',
+                    value: settings.botName,
+                    inputAttributes: { 'x-model': 'botName' }
+                }) }}
 
-{{ forms.selectField({
-    label: "Chat Placement Side"|t('craft-chat'),
-    instructions: "Which side of the screen should the chat appear?"|t('craft-chat'),
-    id: 'chatSide',
-    name: 'chatSide',
-    options: [
-        { label: 'Right', value: 'right' },
-        { label: 'Left', value: 'left' }
-    ],
-    value: settings.chatSide,
-}) }}
+                {{ forms.textareaField({
+                    label: "Welcome Message"|t('craft-chat'),
+                    instructions: "The first message the bot sends when the chat is opened."|t('craft-chat'),
+                    id: 'welcomeMessage',
+                    name: 'welcomeMessage',
+                    value: settings.welcomeMessage,
+                    inputAttributes: { 'x-model': 'welcomeMsg' }
+                }) }}
 
-{{ forms.textField({
-    label: "Default Language"|t('craft-chat'),
-    instructions: "Two-letter language code (e.g. en, sk)."|t('craft-chat'),
-    id: 'defaultLanguage',
-    name: 'defaultLanguage',
-    value: settings.defaultLanguage,
-}) }}
+                {{ forms.selectField({
+                    label: "Chat Placement Side"|t('craft-chat'),
+                    instructions: "Which side of the screen should the chat appear?"|t('craft-chat'),
+                    id: 'chatSide',
+                    name: 'chatSide',
+                    options: [
+                        { label: 'Right', value: 'right' },
+                        { label: 'Left', value: 'left' }
+                    ],
+                    value: settings.chatSide,
+                    inputAttributes: { 'x-model': 'chatSide' }
+                }) }}
 
-<hr>
-<h3>Styling</h3>
+                {{ forms.textField({
+                    label: "Default Language"|t('craft-chat'),
+                    instructions: "Two-letter language code (e.g. en, sk)."|t('craft-chat'),
+                    id: 'defaultLanguage',
+                    name: 'defaultLanguage',
+                    value: settings.defaultLanguage,
+                }) }}
 
-{{ forms.colorField({
-    label: "AI Bubble Color"|t('craft-chat'),
-    id: 'colorChatBubbleAI',
-    name: 'colorChatBubbleAI',
-    value: settings.colorChatBubbleAI,
-}) }}
+                <hr>
+                <h3>Styling</h3>
 
-{{ forms.colorField({
-    label: "User Bubble Color"|t('craft-chat'),
-    id: 'colorChatBubbleUser',
-    name: 'colorChatBubbleUser',
-    value: settings.colorChatBubbleUser,
-}) }}
+                {{ forms.colorField({
+                    label: "AI Bubble Color"|t('craft-chat'),
+                    id: 'colorChatBubbleAI',
+                    name: 'colorChatBubbleAI',
+                    value: settings.colorChatBubbleAI,
+                    inputAttributes: { 'x-model': 'aiColor' }
+                }) }}
 
-{{ forms.colorField({
-    label: "Background Color"|t('craft-chat'),
-    id: 'colorBackground',
-    name: 'colorBackground',
-    value: settings.colorBackground,
-}) }}
+                {{ forms.colorField({
+                    label: "User Bubble Color"|t('craft-chat'),
+                    id: 'colorChatBubbleUser',
+                    name: 'colorChatBubbleUser',
+                    value: settings.colorChatBubbleUser,
+                    inputAttributes: { 'x-model': 'userColor' }
+                }) }}
 
-<hr>
-<h3>Content Feed</h3>
-<p class="textline">Select which sections to use as context for the chatbot to answer from.</p>
+                {{ forms.colorField({
+                    label: "Background Color"|t('craft-chat'),
+                    id: 'colorBackground',
+                    name: 'colorBackground',
+                    value: settings.colorBackground,
+                    inputAttributes: { 'x-model': 'bgColor' }
+                }) }}
+            </div>
 
-{{ forms.checkboxSelectField({
-    label: "Sections to Search"|t('craft-chat'),
-    instructions: "Check which sections the chatbot should use as context."|t('craft-chat'),
-    id: 'searchSections',
-    name: 'searchSections',
-    options: sectionOptions,
-    values: settings.searchSections is iterable ? settings.searchSections : (settings.searchSections ? settings.searchSections|split(',') : []),
-}) }}
+            <!-- Right Side: Live Preview Pane -->
+            <div style="width: 380px; padding: 20px; background: #f3f4f6; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <h3 style="margin-top:0; margin-bottom: 20px;">Live Preview</h3>
+                
+                <div style="position: relative; height: 500px; border: 1px solid #d1d5db; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAACVJREFUKFNjZCASMDKgAhgZGRn+M0L5yBpwmlG5eBswA0kMBgYAAB+WAeC08A93AAAAAElFTkSuQmCC') repeat; border-radius: 8px; overflow: hidden;">
+                    
+                    <!-- Simulating the frontend chat window -->
+                    <div 
+                        style="position: absolute; bottom: 20px; width: 320px; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transition: all 0.3s ease;"
+                        :style="`background-color: ${bgColor.startsWith('#') ? bgColor : '#' + bgColor}; ${chatSide === 'left' ? 'left: 20px;' : 'right: 20px;'}`"
+                    >
+                        <!-- Header -->
+                        <div style="padding: 12px 16px; color: white; display: flex; align-items: center; justify-content: space-between;" :style="`background-color: ${userColor.startsWith('#') ? userColor : '#' + userColor};`">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width:28px; height:28px; background:white; color:black; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold;">AI</div>
+                                <span style="font-weight: 600; font-family: sans-serif;" x-text="botName || 'Chatbot'"></span>
+                            </div>
+                            <span>✖</span>
+                        </div>
+
+                        <!-- Messages -->
+                        <div style="padding: 16px; height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-family: sans-serif; font-size: 14px;">
+                            
+                            <!-- AI Message (Welcome) -->
+                            <div style="display: flex; justify-content: flex-start;">
+                                <div style="padding: 10px 14px; border-radius: 16px; border-bottom-left-radius: 4px; max-width: 85%; color: black;"
+                                     :style="`background-color: ${aiColor.startsWith('#') ? aiColor : '#' + aiColor};`">
+                                    <span x-text="welcomeMsg || 'Hello!'"></span>
+                                </div>
+                            </div>
+
+                            <!-- User Message Example -->
+                            <div style="display: flex; justify-content: flex-end;">
+                                <div style="padding: 10px 14px; border-radius: 16px; border-bottom-right-radius: 4px; max-width: 85%; color: white;"
+                                     :style="`background-color: ${userColor.startsWith('#') ? userColor : '#' + userColor};`">
+                                    How does this look?
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Input -->
+                        <div style="padding: 12px; border-top: 1px solid rgba(0,0,0,0.05); display: flex; gap: 8px;">
+                            <input type="text" placeholder="Type your message..." disabled style="flex: 1; border: 1px solid #e5e7eb; border-radius: 20px; padding: 8px 14px; background: #f9fafb;" />
+                            <button disabled style="width: 36px; height: 36px; border: none; border-radius: 50%; display:flex; align-items:center; justify-content:center; cursor: not-allowed;"
+                                :style="`color: ${userColor.startsWith('#') ? userColor : '#' + userColor};`">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size:12px; color:#6b7280; margin-top:12px; text-align:center;">Updates live as you type.</p>
+            </div>
+        </div>
+    </div>
+
+    {# ---------------- TAB 2: DATA SOURCES & INSTRUCTIONS ---------------- #}
+    <div id="data" class="hidden">
+        {{ forms.textareaField({
+            label: "Initial Instructions"|t('craft-chat'),
+            instructions: "System prompt instructions for the AI behavior."|t('craft-chat'),
+            id: 'initialInstructions',
+            name: 'initialInstructions',
+            value: settings.initialInstructions,
+            rows: 6
+        }) }}
+
+        <hr>
+        <h3>Content Feed</h3>
+        <p class="textline">Select which sections to use as context for the chatbot to answer from.</p>
+
+        {{ forms.checkboxSelectField({
+            label: "Sections to Search"|t('craft-chat'),
+            instructions: "Check which sections the chatbot should use as context."|t('craft-chat'),
+            id: 'searchSections',
+            name: 'searchSections',
+            options: sectionOptions,
+            values: settings.searchSections is iterable ? settings.searchSections : (settings.searchSections ? settings.searchSections|split(',') : []),
+        }) }}
+    </div>
+
+    {# ---------------- TAB 3: KEY & MODEL ---------------- #}
+    <div id="api" class="hidden">
+        {{ forms.textField({
+            first: true,
+            label: "OpenAI API Key"|t('craft-chat'),
+            instructions: "Your secret key for the OpenAI API."|t('craft-chat'),
+            id: 'openaiApiKey',
+            name: 'openaiApiKey',
+            value: settings.openaiApiKey,
+            required: true,
+        }) }}
+
+        {{ forms.selectField({
+            label: "OpenAI Model"|t('craft-chat'),
+            instructions: "Which model to use for chat functionality."|t('craft-chat'),
+            id: 'openaiModel',
+            name: 'openaiModel',
+            options: [
+                { label: 'GPT-5.2', value: 'gpt-5.2' },
+                { label: 'GPT-4o', value: 'gpt-4o' },
+                { label: 'GPT-4o-mini', value: 'gpt-4o-mini' }
+            ],
+            value: settings.openaiModel,
+        }) }}
+    </div>
+</div>
+
+{# Initialize Craft tabs #}
+{% block settingsTabs %}
+    <nav class="tabs" data-tabs>
+        <ul>
+            {% for id, tab in tabs %}
+                <li>
+                    <a href="{{ tab.url }}" id="tab-{{ id }}" class="tab {% if loop.first %}sel{% endif %}" data-target="{{ id }}">{{ tab.label }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </nav>
+{% endblock %}
+
+{% js %}
+$(document).ready(function() {
+    new Craft.Tabs($('.tabs'));
+});
+{% endjs %}

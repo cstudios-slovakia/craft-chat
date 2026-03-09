@@ -8,7 +8,6 @@ use craft\web\twig\variables\CraftVariable;
 use yii\base\Event;
 
 use craft\events\RegisterUrlRulesEvent;
-use craft\events\RegisterTemplateHooksEvent;
 use craft\web\UrlManager;
 use craft\web\View;
 
@@ -44,15 +43,9 @@ class Plugin extends BasePlugin
             }
         );
 
-        Event::on(
-            View::class,
-            View::EVENT_REGISTER_TEMPLATE_HOOKS,
-            function (RegisterTemplateHooksEvent $event) {
-                if ($event->hook === 'chat') {
-                    $event->append = Craft::$app->getView()->renderTemplate('craft-chat/_chat-hook');
-                }
-            }
-        );
+        Craft::$app->getView()->hook('chat', function (array &$context) {
+            return Craft::$app->getView()->renderTemplate('craft-chat/_chat-hook');
+        });
 
         Event::on(
             UrlManager::class,

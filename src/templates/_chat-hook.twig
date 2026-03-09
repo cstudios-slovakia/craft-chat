@@ -1,0 +1,99 @@
+{# _chat-hook.twig #}
+{% do view.registerAssetBundle("Cstudios\\CraftChat\\web\\assets\\chat\\ChatAsset") %}
+
+{% set settings = craft.craftChat.getSettings() %}
+{% set side = settings.chatSide == 'left' ? 'left: 20px;' : 'right: 20px;' %}
+{% set botName = settings.botName ?? 'Chatbot' %}
+{% set welcomeMsg = settings.welcomeMessage ?? 'Hello!' %}
+{% set aiColor = settings.colorChatBubbleAI ?? '#E5E7EB' %}
+{% set userColor = settings.colorChatBubbleUser ?? '#3B82F6' %}
+{% set bgColor = settings.colorBackground ?? '#FFFFFF' %}
+
+<div 
+    x-data="craftChat({
+        botName: '{{ botName|escape('js') }}',
+        welcomeMsg: '{{ welcomeMsg|escape('js') }}',
+        csrfTokenValue: '{{ craft.app.request.csrfToken }}',
+        csrfTokenName: '{{ craft.app.config.general.csrfTokenName }}'
+    })"
+    class="craft-chat-wrapper"
+    style="{{ side }} bottom: 20px;"
+>
+    <!-- Chat Blob (Closed State) -->
+    <button 
+        x-show="!isOpen"
+        @click="openChat()"
+        class="craft-chat-blob"
+        style="background-color: {{ userColor }};"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white text-xl">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.305 5.481l-1.927 3.23a.75.75 0 001.037 1.055l3.295-1.579A8.951 8.951 0 0012 20.25z" />
+        </svg>
+
+        <!-- Unread indicator if there is an active closed chat -->
+        <div x-show="hasActiveChat && !isOpen" class="craft-chat-unread-indicator"></div>
+    </button>
+
+    <!-- Chat Window (Open State) -->
+    <div 
+        x-show="isOpen"
+        x-cloak
+        style="background-color: {{ bgColor }};"
+        :class="{ 'craft-chat-window': true, 'craft-chat-fullscreen': isFullscreen }"
+    >
+        <!-- Header -->
+        <div class="craft-chat-header" style="background-color: {{ userColor }};">
+            <div class="craft-chat-header-title">
+                <span style="display:flex;align-items:center;gap:8px;">
+                    <div class="craft-chat-avatar">AI</div>
+                    <span x-text="botName"></span>
+                </span>
+                <label class="craft-chat-autonav" style="font-size: 12px; display:flex; align-items:center; gap: 4px;">
+                    <input type="checkbox" x-model="autoNavigate"> Auto-nav
+                </label>
+            </div>
+            <div class="craft-chat-header-actions">
+                <button @click="toggleFullscreen()" class="craft-chat-action-btn">
+                    <span x-show="!isFullscreen">⛶</span>
+                    <span x-show="isFullscreen">🗗</span>
+                </button>
+                <button @click="closeChat()" class="craft-chat-action-btn">✖</button>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="craft-chat-messages" x-ref="messagesContainer">
+            <template x-for="(msg, index) in messages" :key="index">
+                <div :class="msg.role === 'user' ? 'craft-chat-msg-user-wrap' : 'craft-chat-msg-ai-wrap'">
+                    <div 
+                        class="craft-chat-msg"
+                        :style="msg.role === 'user' ? 'background-color: {{ userColor }}; color: #fff;' : 'background-color: {{ aiColor }}; color: #000;'"
+                        x-html="formatMessage(msg.content)"
+                    ></div>
+                </div>
+            </template>
+            <!-- Loading indicator -->
+            <div x-show="isLoading" class="craft-chat-msg-ai-wrap">
+                <div class="craft-chat-msg" style="background-color: {{ aiColor }}; color: #000;">
+                    <span class="craft-chat-typing"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <form @submit.prevent="sendMessage()" class="craft-chat-input-area">
+            <input 
+                type="text" 
+                x-model="newMessage" 
+                placeholder="Type your message..." 
+                class="craft-chat-input"
+                :disabled="isLoading"
+            />
+            <button type="submit" class="craft-chat-send-btn" :disabled="isLoading || !newMessage.trim()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="fill: {{ userColor }}">
+                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,47 @@
+{% extends "_layouts/cp" %}
+
+{% set title = "Conversation #" ~ conversation.id %}
+
+{% set crumbs = [
+    { label: "Conversations"|t('craft-chat'), url: url('craft-chat') }
+] %}
+
+{% block content %}
+    <div class="grid" data-cols="3">
+        <div class="item" data-colspan="2">
+            <h2>Messages</h2>
+            <div class="chat-thread" style="background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 20px; max-height: 600px; overflow-y: auto;">
+                {% for message in messages %}
+                    <div style="margin-bottom: 15px; text-align: {{ message.role == 'user' ? 'right' : 'left' }}">
+                        <strong style="color: {{ message.role == 'user' ? '#3B82F6' : '#E5E7EB' }}">{{ message.role == 'user' ? 'User' : 'Assistant' }}</strong><br>
+                        <div style="display: inline-block; background: {{ message.role == 'user' ? '#3B82F6' : '#E5E7EB' }}; color: {{ message.role == 'user' ? '#fff' : '#000' }}; padding: 10px 15px; border-radius: 8px; max-width: 80%; white-space: pre-wrap;">
+                            {{ message.content }}
+                        </div>
+                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">{{ message.dateCreated|datetime('short') }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="item" data-colspan="1">
+            <h2>Summary</h2>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 4px; border: 1px solid #ddd;">
+                {% if conversation.summary %}
+                    <p>{{ conversation.summary }}</p>
+                {% else %}
+                    <p><em>No summary generated yet.</em></p>
+                {% endif %}
+            </div>
+            
+            <h3 style="margin-top: 20px;">Details</h3>
+            <ul>
+                <li><strong>Status:</strong> {{ conversation.status }}</li>
+                <li><strong>Started:</strong> {{ conversation.dateCreated|datetime('short') }}</li>
+                <li><strong>Last Updated:</strong> {{ conversation.dateUpdated|datetime('short') }}</li>
+                <li><strong>Messages:</strong> {{ conversation.messageCount }}</li>
+                {% if conversation.userId %}
+                    <li><strong>User:</strong> {{ craft.users.id(conversation.userId).one().email ?? 'Unknown' }}</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

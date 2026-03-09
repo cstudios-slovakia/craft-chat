@@ -150,18 +150,29 @@ document.addEventListener('alpine:init', () => {
         },
 
         formatMessage(text) {
-            // Convert markdown style links to stylized HTML
-            // Replace [Text](URL) with the requested card format if possible, or simple links
-            const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+            // First, protect basic HTML to prevent injection
+            let formatted = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-            // Just basic link formatting for now. If it's the whole message, we can make it a card.
-            return text.replace(linkRegex, (fullMatch, textContent, url) => {
-                // If autoNavigate is on, we can click it to go
+            // Convert markdown style links to stylized HTML cards
+            const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+            formatted = formatted.replace(linkRegex, (fullMatch, textContent, url) => {
                 return `<a href="${url}" target="_blank" class="craft-chat-card">
                     <span class="craft-chat-card-title">${textContent} <small>↗</small></span>
                     <span class="craft-chat-card-desc">${url}</span>
                 </a>`;
-            }).replace(/\n/g, '<br>'); // preserve newlines
+            });
+
+            // Parse Bold (**text** or __text__)
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+            // Parse Italic (*text* or _text_)
+            // Negative lookbehinds are avoid matching the insides of already-parsed bold tags
+            formatted = formatted.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+            formatted = formatted.replace(/(?<!\_)\_(?!\_)(.*?)(?<!\_)\_(?!\_)/g, '<em>$1</em>');
+
+            // Preserve newlines
+            return formatted.replace(/\n/g, '<br>');
         },
 
         scrollToBottom() {

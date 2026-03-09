@@ -175,6 +175,14 @@
     text-decoration: underline;
 }
 
+.craft-chat-msg strong {
+    font-weight: 700;
+}
+
+.craft-chat-msg em {
+    font-style: italic;
+}
+
 /* Suggested Card for Links */
 .craft-chat-card {
     border: 1px solid rgba(255, 255, 255, 0.4);

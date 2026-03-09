@@ -75,7 +75,7 @@ class Plugin extends BasePlugin
 
     protected function settingsHtml(): string
     {
-        $sections = Craft::$app->getSections()->getAllSections();
+        $sections = Craft::$app->getEntries()->getAllSections();
         $sectionOptions = [];
         foreach ($sections as $section) {
             $sectionOptions[] = ['label' => $section->name, 'value' => $section->handle];

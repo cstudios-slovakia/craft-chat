@@ -8,7 +8,9 @@ use craft\web\twig\variables\CraftVariable;
 use yii\base\Event;
 
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\RegisterTemplateHooksEvent;
 use craft\web\UrlManager;
+use craft\web\View;
 
 use Cstudios\CraftChat\models\Settings;
 use Cstudios\CraftChat\services\ChatService;
@@ -39,6 +41,16 @@ class Plugin extends BasePlugin
                 /** @var CraftVariable $variable */
                 $variable = $event->sender;
                 $variable->set('craftChat', CraftChatVariable::class);
+            }
+        );
+
+        Event::on(
+            View::class,
+            View::EVENT_REGISTER_TEMPLATE_HOOKS,
+            function (RegisterTemplateHooksEvent $event) {
+                if ($event->hook === 'chat') {
+                    $event->append = Craft::$app->getView()->renderTemplate('craft-chat/_chat-hook');
+                }
             }
         );
 

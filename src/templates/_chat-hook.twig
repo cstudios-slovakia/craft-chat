@@ -4,11 +4,11 @@
 
 {% set settings = craft.craftChat.getSettings() %}
 {% set side = settings.chatSide == 'left' ? 'left: 20px;' : 'right: 20px;' %}
-{% set botName = settings.botName|default('Chatbot') %}
-{% set welcomeMsg = settings.welcomeMessage|default('Hello!') %}
-{% set aiColor = settings.colorChatBubbleAI|default('E5E7EB')|replace({'#': ''}) %}
-{% set userColor = settings.colorChatBubbleUser|default('3B82F6')|replace({'#': ''}) %}
-{% set bgColor = settings.colorBackground|default('FFFFFF')|replace({'#': ''}) %}
+{% set botName = settings.botName ?: 'Chatbot' %}
+{% set welcomeMsg = settings.welcomeMessage ?: 'Hello!' %}
+{% set aiColor = (settings.colorChatBubbleAI ?: 'E5E7EB')|replace({'#': ''}) %}
+{% set userColor = (settings.colorChatBubbleUser ?: '3B82F6')|replace({'#': ''}) %}
+{% set bgColor = (settings.colorBackground ?: 'FFFFFF')|replace({'#': ''}) %}
 
 <div 
     x-data="craftChat({

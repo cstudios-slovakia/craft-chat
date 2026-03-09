@@ -43,7 +43,7 @@
     <div class="pane-tabs">
         <div role="tablist" aria-label="Settings Tabs">
             {% for id, tab in settingTabs %}
-                <a href="#" 
+                <a href="#tab-{{ id }}" 
                    :class="{ 'sel': activeTab === '{{ id }}' }" 
                    @click.prevent="activeTab = '{{ id }}'" 
                    role="tab" 

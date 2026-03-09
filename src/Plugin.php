@@ -65,6 +65,15 @@ class Plugin extends BasePlugin
             }
         );
 
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            function (RegisterUrlRulesEvent $event) {
+                $event->rules['craft-chat'] = 'craft-chat/cp/index';
+                $event->rules['craft-chat/conversations/<id:\d+>'] = 'craft-chat/cp/view';
+            }
+        );
+
         Craft::info('Craft Chat plugin loaded', __METHOD__);
     }
 

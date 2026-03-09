@@ -2,15 +2,20 @@
 
 {% do view.registerJsFile('https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js', {'defer': true}) %}
 
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+
 {% set settingTabs = {
-    personalisation: { label: "Personalisation"|t('craft-chat'), url: '#personalisation' },
-    data: { label: "Data Sources & Instructions"|t('craft-chat'), url: '#data' },
-    api: { label: "Key & Model"|t('craft-chat'), url: '#api' }
+    personalisation: { label: "Personalisation"|t('craft-chat') },
+    data: { label: "Data Sources & Instructions"|t('craft-chat') },
+    api: { label: "Key & Model"|t('craft-chat') }
 } %}
 
 {{ block('settingsTabs') }}
 
 <div id="settings-content" x-data="{
+    activeTab: 'personalisation',
     botName: '{{ settings.botName|escape('js') }}',
     welcomeMsg: '{{ settings.welcomeMessage|escape('js') }}',
     chatSide: '{{ settings.chatSide|escape('js') }}',
@@ -20,7 +25,7 @@
 }">
 
     {# ---------------- TAB 1: PERSONALISATION ---------------- #}
-    <div id="personalisation" class="hidden">
+    <div id="personalisation" x-show="activeTab === 'personalisation'" x-cloak>
         <div style="display: flex; gap: 40px; align-items: flex-start;">
             
             <!-- Left Side: Form Inputs -->
@@ -151,7 +156,7 @@
     </div>
 
     {# ---------------- TAB 2: DATA SOURCES & INSTRUCTIONS ---------------- #}
-    <div id="data" class="hidden">
+    <div id="data" x-show="activeTab === 'data'" x-cloak>
         {{ forms.textareaField({
             label: "Initial Instructions"|t('craft-chat'),
             instructions: "System prompt instructions for the AI behavior."|t('craft-chat'),
@@ -176,7 +181,7 @@
     </div>
 
     {# ---------------- TAB 3: KEY & MODEL ---------------- #}
-    <div id="api" class="hidden">
+    <div id="api" x-show="activeTab === 'api'" x-cloak>
         {{ forms.textField({
             first: true,
             label: "OpenAI API Key"|t('craft-chat'),
@@ -202,44 +207,15 @@
     </div>
 </div>
 
-{# Initialize Craft tabs #}
+{# Initialize Alpine tabs #}
 {% block settingsTabs %}
-    <nav class="tabs" data-tabs>
+    <nav class="tabs">
         <ul>
             {% for id, tab in settingTabs %}
                 <li>
-                    <a href="{{ tab.url }}" id="tab-{{ id }}" class="tab {% if loop.first %}sel{% endif %}" data-target="{{ id }}">{{ tab.label }}</a>
+                    <a href="#" class="tab" :class="{ 'sel': activeTab === '{{ id }}' }" @click.prevent="activeTab = '{{ id }}'">{{ tab.label }}</a>
                 </li>
             {% endfor %}
         </ul>
     </nav>
 {% endblock %}
-
-{% js %}
-$(document).ready(function() {
-    // Hide all tabs except the first
-    var $tabs = $('#settings-content > div');
-    
-    // Initialize Craft UI Tabs logic globally scoped so Craft can find the $container
-    window.craftChatTabs = new Craft.Tabs($('.tabs'));
-    
-    // Listen for tab changes
-    window.craftChatTabs.on('selectTab', function(e) {
-        var targetId = $(e.target).attr('href'); // e.g., #personalisation
-        
-        // Hide all
-        $tabs.addClass('hidden');
-        
-        // Show current
-        $(targetId).removeClass('hidden');
-    });
-
-    // Initial load: show the active tab
-    var defaultTab = $('.tabs .tab.sel').attr('href');
-    if(defaultTab) {
-        $(defaultTab).removeClass('hidden');
-    } else {
-        $('#personalisation').removeClass('hidden');
-    }
-});
-{% endjs %}

@@ -8,6 +8,7 @@ use craft\web\twig\variables\CraftVariable;
 use yii\base\Event;
 
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\RegisterTemplateRootsEvent;
 use craft\web\UrlManager;
 use craft\web\View;
 
@@ -40,6 +41,14 @@ class Plugin extends BasePlugin
                 /** @var CraftVariable $variable */
                 $variable = $event->sender;
                 $variable->set('craftChat', CraftChatVariable::class);
+            }
+        );
+
+        Event::on(
+            View::class,
+            View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS,
+            function (RegisterTemplateRootsEvent $event) {
+                $event->roots['craft-chat'] = __DIR__ . '/templates';
             }
         );
 

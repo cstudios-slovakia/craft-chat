@@ -1,4 +1,5 @@
 {# _chat-hook.twig #}
+{% do view.registerJsFile('https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js', {'defer': true}) %}
 {% do view.registerAssetBundle("Cstudios\\CraftChat\\web\\assets\\chat\\ChatAsset") %}
 
 {% set settings = craft.craftChat.getSettings() %}

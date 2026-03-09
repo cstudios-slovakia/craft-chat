@@ -12,8 +12,8 @@ class ChatController extends Controller
     // Important: false means anonymous users can hit these endpoints
     protected array|int|bool $allowAnonymous = true;
 
-    // Remove CSRF validation for external AJAX if needed, though usually Craft handles this nicely.
-    // public $enableCsrfValidation = false; 
+    // Remove CSRF validation for external AJAX.
+    public bool $enableCsrfValidation = false;
 
     public function actionStart()
     {

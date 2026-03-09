@@ -9,7 +9,7 @@ document.addEventListener('alpine:init', () => {
         conversationId: null,
         newMessage: '',
         messages: [],
-        
+
         botName: config.botName,
         welcomeMsg: config.welcomeMsg,
         csrfTokenValue: config.csrfTokenValue,
@@ -48,13 +48,16 @@ document.addEventListener('alpine:init', () => {
             try {
                 const body = new URLSearchParams();
                 body.append(this.csrfTokenName, this.csrfTokenValue);
-                
+
                 const response = await fetch('/craft-chat/api/start', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
                     body: body.toString()
                 });
-                
+
                 const data = await response.json();
                 if (data.success) {
                     this.conversationId = data.conversationId;
@@ -83,12 +86,15 @@ document.addEventListener('alpine:init', () => {
 
                 const response = await fetch('/craft-chat/api/message', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
                     body: body.toString()
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     this.messages.push({ role: 'assistant', content: data.response });
                     this.checkForLinks(data.response);
@@ -121,7 +127,7 @@ document.addEventListener('alpine:init', () => {
             // Convert markdown style links to stylized HTML
             // Replace [Text](URL) with the requested card format if possible, or simple links
             const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-            
+
             // Just basic link formatting for now. If it's the whole message, we can make it a card.
             return text.replace(linkRegex, (fullMatch, textContent, url) => {
                 // If autoNavigate is on, we can click it to go

@@ -217,6 +217,29 @@
 
 {% js %}
 $(document).ready(function() {
-    new Craft.Tabs($('.tabs'));
+    // Hide all tabs except the first
+    var $tabs = $('#settings-content > div');
+    
+    // Initialize Craft UI Tabs logic
+    var craftTabs = new Craft.Tabs($('.tabs'));
+    
+    // Listen for tab changes
+    craftTabs.on('selectTab', function(e) {
+        var targetId = $(e.target).attr('href'); // e.g., #personalisation
+        
+        // Hide all
+        $tabs.addClass('hidden');
+        
+        // Show current
+        $(targetId).removeClass('hidden');
+    });
+
+    // Initial load: show the active tab
+    var defaultTab = $('.tabs .tab.sel').attr('href');
+    if(defaultTab) {
+        $(defaultTab).removeClass('hidden');
+    } else {
+        $('#personalisation').removeClass('hidden');
+    }
 });
 {% endjs %}

@@ -74,7 +74,7 @@ class ChatService extends Component
         $userMsgRecord->content = $userMessage;
         $userMsgRecord->save();
 
-        $systemContent = trim($settings->initialInstructions) . "\n\nIf you need specific information, use the search_faqs tool FIRST. If you cannot find the answer there, use the search_website tool to find content on the site. If you STILL cannot find the answer and do not know how to help the user, you MUST use the log_unanswered_question tool passing the user's question, and then kindly tell the user you don't know the answer.";
+        $systemContent = trim($settings->initialInstructions) . "\n\nIf you need specific information, use the search_faqs tool FIRST. If you cannot find the answer there, use the search_website tool to find content on the site. If you STILL cannot find the answer in the FAQ or Website, you MUST use the log_unanswered_question tool passing the user's exact question, and then kindly tell the user you don't know the answer. DO NOT use the log_unanswered_question tool if you found an answer in the FAQ, even if that answer states that you cannot help the user or do not offer the service.";
 
         // Build Payload
         $messagesPayload = [
@@ -210,7 +210,7 @@ class ChatService extends Component
             $totalCompletionTokens = $responseData['usage']['completion_tokens'] ?? 0;
 
             $iterations = 0;
-            $maxIterations = 3;
+            $maxIterations = 5;
 
             // Execute Tool Calls if AI wants to search, support recursive calls
             while ($iterations < $maxIterations) {
@@ -343,7 +343,11 @@ class ChatService extends Component
 
             $aiResponseText = $responseData['choices'][0]['message']['content'] ?? null;
             if (!$aiResponseText) {
-                $aiResponseText = "Sorry, I couldn't process that. Details: " . json_encode($responseData);
+                if (!empty($responseData['choices'][0]['message']['tool_calls'])) {
+                    $aiResponseText = "Sorry, I am still processing the information but ran out of time. Please try asking again.";
+                } else {
+                    $aiResponseText = "Sorry, I couldn't process that. Server response was empty.";
+                }
             }
 
             // Save AI Message

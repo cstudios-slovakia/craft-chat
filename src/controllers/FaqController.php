@@ -75,7 +75,7 @@ class FaqController extends Controller
 
         if ($faq->save()) {
             Craft::$app->getSession()->setNotice('FAQ saved.');
-            return $this->redirectToPostedUrl(faq, UrlHelper::cpUrl('craft-chat/faq'));
+            return $this->redirectToPostedUrl($faq);
         }
 
         Craft::$app->getSession()->setError('Could not save FAQ.');

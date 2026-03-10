@@ -1,0 +1,90 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Knowledge Base"|t('craft-chat') %}
+
+{# Set the active sub-navigation item #}
+{% set selectedSubnavItem = 'faq' %}
+
+{% block actionButton %}
+    <a href="{{ cpUrl('craft-chat/faq/new') }}" class="btn submit add icon">New FAQ</a>
+{% endblock %}
+
+{% block content %}
+    <p class="textline">These frequent questions are used by the chatbot to provide immediate, curated answers before searching the general website content. Questions that the bot cannot answer will automatically appear here.</p>
+
+    {% if faqs|length %}
+        <div class="tableview" dir="ltr">
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th scope="col">Question</th>
+                        <th scope="col">Answered?</th>
+                        <th scope="col">Relevancy Counter</th>
+                        <th scope="col">Date Updated</th>
+                        <th scope="col" class="thin"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in faqs %}
+                        <tr>
+                            <td>
+                                <strong><a href="{{ cpUrl('craft-chat/faq/' ~ item.id) }}">{{ item.question|truncate(80) }}</a></strong>
+                            </td>
+                            <td>
+                                {% if item.answer %}
+                                    <span class="status green"></span> Yes
+                                {% else %}
+                                    <span class="status red"></span> No
+                                {% endif %}
+                            </td>
+                            <td>{{ item.relevancyCounter }}</td>
+                            <td>{{ item.dateUpdated|datetime('short') }}</td>
+                            <td class="thin action">
+                                <form method="post" accept-charset="UTF-8">
+                                    {{ csrfInput() }}
+                                    <input type="hidden" name="action" value="craft-chat/faq/delete">
+                                    <input type="hidden" name="faqId" value="{{ item.id }}">
+                                    <button type="submit" class="delete icon" title="Delete"></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No FAQs have been added yet.</p>
+    {% endif %}
+
+    {# Simple JS to handle delete confirmations if needed, though forms handle basic posts. #}
+    <script>
+        document.querySelectorAll('button.delete').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                if(!confirm('Are you sure you want to delete this FAQ?')) {
+                    e.preventDefault();
+                } else {
+                    e.preventDefault();
+                    var form = this.closest('form');
+                    var data = new URLSearchParams(new FormData(form));
+                    
+                    fetch(window.Craft.actionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Accept': 'application/json',
+                            'X-CSRF-Token': window.craft.csrfTokenValue
+                        },
+                        body: data.toString()
+                    }).then(res => res.json()).then(response => {
+                        if(response.success) {
+                            form.closest('tr').remove();
+                        } else {
+                            alert(response.error || 'Could not delete.');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}

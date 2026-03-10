@@ -1,0 +1,48 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{# Title will be either 'New FAQ' or 'Edit FAQ' passed from controller #}
+{% set selectedSubnavItem = 'faq' %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    <input type="hidden" name="action" value="craft-chat/faq/save">
+    {{ redirectInput('craft-chat/faq') }}
+    
+    {% if faq.id %}
+        <input type="hidden" name="faqId" value="{{ faq.id }}">
+    {% endif %}
+
+    {{ forms.textareaField({
+        first: true,
+        label: "Question"|t('craft-chat'),
+        instructions: "The specific question asked by a user."|t('craft-chat'),
+        id: 'question',
+        name: 'question',
+        value: faq.question,
+        errors: faq.getErrors('question'),
+        required: true,
+        rows: 2
+    }) }}
+
+    {{ forms.textareaField({
+        label: "Answer"|t('craft-chat'),
+        instructions: "Provide the official answer here. The bot will prioritize this answer over general website content."|t('craft-chat'),
+        id: 'answer',
+        name: 'answer',
+        value: faq.answer,
+        errors: faq.getErrors('answer'),
+        rows: 6
+    }) }}
+
+    {{ forms.textField({
+        label: "Relevancy Counter"|t('craft-chat'),
+        instructions: "Number of times this question or a similar one has been asked by visitors. Higher numbers indicate a missing piece of highly requested information."|t('craft-chat'),
+        id: 'relevancyCounter',
+        name: 'relevancyCounter',
+        type: 'number',
+        value: faq.relevancyCounter ?? 1,
+        errors: faq.getErrors('relevancyCounter'),
+        required: true
+    }) }}
+{% endblock %}

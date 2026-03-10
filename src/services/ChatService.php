@@ -74,7 +74,7 @@ class ChatService extends Component
         $userMsgRecord->content = $userMessage;
         $userMsgRecord->save();
 
-        $systemContent = trim($settings->initialInstructions) . "\n\nIf you need specific information, use the search_website tool to find content and cite the source URLs provided in your answer.";
+        $systemContent = trim($settings->initialInstructions) . "\n\nIf you need specific information, use the search_faqs tool FIRST. If you cannot find the answer there, use the search_website tool to find content on the site. If you STILL cannot find the answer and do not know how to help the user, you MUST use the log_unanswered_question tool passing the user's question, and then kindly tell the user you don't know the answer.";
 
         // Build Payload
         $messagesPayload = [
@@ -110,6 +110,23 @@ class ChatService extends Component
                 [
                     'type' => 'function',
                     'function' => [
+                        'name' => 'search_faqs',
+                        'description' => 'Search the official Knowledge Base/FAQ for verified answers.',
+                        'parameters' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'query' => [
+                                    'type' => 'string',
+                                    'description' => 'The keyword or phrase to search in the FAQ database.'
+                                ]
+                            ],
+                            'required' => ['query']
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'function',
+                    'function' => [
                         'name' => 'search_website',
                         'description' => 'Search the website content for specific keywords if you need information to answer the user\'s query. If you don\'t find results, try searching with synonyms or simpler keywords.',
                         'parameters' => [
@@ -121,6 +138,55 @@ class ChatService extends Component
                                 ]
                             ],
                             'required' => ['query']
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'function',
+                    'function' => [
+                        'name' => 'log_unanswered_question',
+                        'description' => 'Log the user\'s question to the database if you absolutely cannot find an answer in the FAQ or Website. Use this before telling the user you do not know.',
+                        'parameters' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'question' => [
+                                    'type' => 'string',
+                                    'description' => 'The specific question the user asked that you could not answer.'
+                                ]
+                            ],
+                            'required' => ['question']
+                        ]
+                    ]
+                ]
+            ];
+        } else {
+            // Even if no sections selected, we can enable FAQ tools
+            $payload['tools'] = [
+                [
+                    'type' => 'function',
+                    'function' => [
+                        'name' => 'search_faqs',
+                        'description' => 'Search the official Knowledge Base/FAQ for verified answers.',
+                        'parameters' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'query' => ['type' => 'string']
+                            ],
+                            'required' => ['query']
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'function',
+                    'function' => [
+                        'name' => 'log_unanswered_question',
+                        'description' => 'Log the user\'s question to the database if you absolutely cannot find an answer in the FAQ or Website.',
+                        'parameters' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'question' => ['type' => 'string']
+                            ],
+                            'required' => ['question']
                         ]
                     ]
                 ]
@@ -158,7 +224,38 @@ class ChatService extends Component
                 $messagesPayload[] = $messageBlock; // append assistant tool call request
 
                 foreach ($messageBlock['tool_calls'] as $toolCall) {
-                    if ($toolCall['function']['name'] === 'search_website') {
+                    if ($toolCall['function']['name'] === 'search_faqs') {
+                        $args = json_decode($toolCall['function']['arguments'], true);
+                        $query = $args['query'] ?? '';
+
+                        Craft::info("Craft Chat Tool: search_faqs query='{$query}'", __METHOD__);
+
+                        $faqRecords = \Cstudios\CraftChat\records\Faq::find()
+                            ->where(['not', ['answer' => null]])
+                            ->andWhere([
+                                'or',
+                                ['like', 'question', $query],
+                                ['like', 'answer', $query]
+                            ])
+                            ->limit(3)
+                            ->all();
+
+                        $searchResults = [];
+                        foreach ($faqRecords as $faq) {
+                            $searchResults[] = [
+                                'question' => $faq->question,
+                                'answer' => $faq->answer
+                            ];
+                        }
+
+                        $messagesPayload[] = [
+                            'role' => 'tool',
+                            'tool_call_id' => $toolCall['id'],
+                            'name' => 'search_faqs',
+                            'content' => empty($searchResults) ? "No verified FAQ found for '{$query}'." : json_encode($searchResults)
+                        ];
+
+                    } elseif ($toolCall['function']['name'] === 'search_website') {
                         $args = json_decode($toolCall['function']['arguments'], true);
                         $query = $args['query'] ?? '';
 
@@ -187,6 +284,42 @@ class ChatService extends Component
                             'tool_call_id' => $toolCall['id'],
                             'name' => 'search_website',
                             'content' => empty($searchResults) ? "No results found for '{$query}'. Try different keywords." : json_encode($searchResults)
+                        ];
+
+                    } elseif ($toolCall['function']['name'] === 'log_unanswered_question') {
+                        $args = json_decode($toolCall['function']['arguments'], true);
+                        $question = $args['question'] ?? '';
+
+                        Craft::info("Craft Chat Tool: log_unanswered_question question='{$question}'", __METHOD__);
+
+                        // Check if a similar unanswered question already exists
+                        if (!empty($question)) {
+                            $existingFaq = \Cstudios\CraftChat\records\Faq::find()
+                                ->where(['answer' => null])
+                                ->andWhere(['like', 'question', $question])
+                                ->one();
+
+                            if ($existingFaq) {
+                                $existingFaq->relevancyCounter += 1;
+                                $existingFaq->save();
+                            } else {
+                                $newFaq = new \Cstudios\CraftChat\records\Faq();
+                                $newFaq->question = $question;
+                                $newFaq->relevancyCounter = 1;
+                                $newFaq->save();
+
+                                // Dispatch background worker to try to draft an answer
+                                Craft::$app->getQueue()->push(new \Cstudios\CraftChat\jobs\GenerateFaqAnswerJob([
+                                    'faqId' => $newFaq->id
+                                ]));
+                            }
+                        }
+
+                        $messagesPayload[] = [
+                            'role' => 'tool',
+                            'tool_call_id' => $toolCall['id'],
+                            'name' => 'log_unanswered_question',
+                            'content' => "Question logged successfully. You may now apologize to the user."
                         ];
                     }
                 }

@@ -71,12 +71,29 @@ class Plugin extends BasePlugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
             function (RegisterUrlRulesEvent $event) {
+                // Conversations
                 $event->rules['craft-chat'] = 'craft-chat/cp/index';
                 $event->rules['craft-chat/conversations/<id:\d+>'] = 'craft-chat/cp/view';
+
+                // Knowledge Base
+                $event->rules['craft-chat/faq'] = 'craft-chat/faq/index';
+                $event->rules['craft-chat/faq/new'] = 'craft-chat/faq/edit';
+                $event->rules['craft-chat/faq/<faqId:\d+>'] = 'craft-chat/faq/edit';
             }
         );
 
         Craft::info('Craft Chat plugin loaded', __METHOD__);
+    }
+
+    public function getCpNavItem(): ?array
+    {
+        $item = parent::getCpNavItem();
+        $item['subnav'] = [
+            'conversations' => ['label' => 'Conversations', 'url' => 'craft-chat'],
+            'faq' => ['label' => 'Knowledge Base', 'url' => 'craft-chat/faq'],
+            'settings' => ['label' => 'Settings', 'url' => 'settings/plugins/craft-chat']
+        ];
+        return $item;
     }
 
     protected function createSettingsModel(): ?\craft\base\Model

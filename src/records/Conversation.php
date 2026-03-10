@@ -11,6 +11,8 @@ use craft\db\ActiveRecord;
  * @property string|null $summary
  * @property int $messageCount
  * @property string $status
+ * @property string|null $ipAddress
+ * @property string|null $location
  */
 class Conversation extends ActiveRecord
 {

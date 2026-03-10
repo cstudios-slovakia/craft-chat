@@ -38,6 +38,8 @@
                 <li><strong>Started:</strong> {{ conversation.dateCreated|datetime('short') }}</li>
                 <li><strong>Last Updated:</strong> {{ conversation.dateUpdated|datetime('short') }}</li>
                 <li><strong>Messages:</strong> {{ conversation.messageCount }}</li>
+                <li><strong>IP Address:</strong> {{ conversation.ipAddress ?? 'Unknown' }}</li>
+                <li><strong>Location:</strong> {{ conversation.location ?? 'Unknown' }}</li>
                 {% if conversation.userId %}
                     <li><strong>User:</strong> {{ craft.users.id(conversation.userId).one().email ?? 'Unknown' }}</li>
                 {% endif %}

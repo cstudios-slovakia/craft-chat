@@ -215,6 +215,18 @@
                 ],
                 value: settings.openaiModel,
             }) }}
+
+            <hr>
+            <h3>Rate Limiting</h3>
+            {{ forms.textField({
+                label: "Max Messages Per Minute"|t('craft-chat'),
+                instructions: "Prevent spam by limiting how many messages a single session/user can send per minute."|t('craft-chat'),
+                id: 'maxMessagesPerMinute',
+                name: 'maxMessagesPerMinute',
+                type: 'number',
+                value: settings.maxMessagesPerMinute,
+                required: true,
+            }) }}
         </div>
     </div>
 {% endblock %}

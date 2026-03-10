@@ -25,11 +25,15 @@ class Settings extends Model
     public array $feedSections = [];
     public array $feedCategories = [];
 
+    // Rate Limiting
+    public int $maxMessagesPerMinute = 10;
+
     protected function defineRules(): array
     {
         return [
             [['openaiApiKey', 'openaiModel', 'botName', 'welcomeMessage', 'chatSide', 'defaultLanguage', 'colorChatBubbleAI', 'colorChatBubbleUser', 'colorBackground'], 'string'],
             [['searchSections', 'feedSections', 'feedCategories'], 'safe'],
+            [['maxMessagesPerMinute'], 'integer', 'min' => 1],
         ];
     }
 }

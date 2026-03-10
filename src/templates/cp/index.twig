@@ -41,7 +41,7 @@
             <div style="padding-bottom: 2px;">
                 <input type="submit" class="btn submit" value="Search">
                 {% if (q is defined and q) or (dateFrom is defined and dateFrom) or (dateTo is defined and dateTo) %}
-                    <a href="{{ url('admin/craft-chat') }}" class="btn">Clear</a>
+                    <a href="{{ cpUrl('craft-chat') }}" class="btn">Clear</a>
                 {% endif %}
             </div>
         </div>

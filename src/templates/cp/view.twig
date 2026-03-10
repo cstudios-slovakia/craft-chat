@@ -12,12 +12,10 @@
             <h2>Messages</h2>
             <div class="chat-thread" style="background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 20px; max-height: 600px; overflow-y: auto;">
                 {% for message in messages %}
-                    <div style="margin-bottom: 15px; text-align: {{ message.role == 'user' ? 'right' : 'left' }}">
-                        <strong style="color: {{ message.role == 'user' ? '#3B82F6' : '#E5E7EB' }}">{{ message.role == 'user' ? 'User' : 'Assistant' }}</strong><br>
-                        <div style="display: inline-block; background: {{ message.role == 'user' ? '#3B82F6' : '#E5E7EB' }}; color: {{ message.role == 'user' ? '#fff' : '#000' }}; padding: 10px 15px; border-radius: 8px; max-width: 80%; white-space: pre-wrap;">
-                            {{ message.content }}
-                        </div>
-                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">{{ message.dateCreated|datetime('short') }}</div>
+                    <div style="margin-bottom: 12px; text-align: {{ message.role == 'user' ? 'right' : 'left' }}">
+                        <strong style="color: {{ message.role == 'user' ? '#3B82F6' : '#6B7280' }}; font-size: 0.9em;">{{ message.role == 'user' ? 'User' : 'Assistant' }}</strong><br>
+                        <div style="display: inline-block; text-align: left; background: {{ message.role == 'user' ? '#3B82F6' : '#F3F4F6' }}; color: {{ message.role == 'user' ? '#fff' : '#1F2937' }}; padding: 8px 14px; border-radius: 12px; max-width: 85%; white-space: pre-wrap; font-size: 14px; margin-top: 4px;">{{ message.content|trim }}</div>
+                        <div style="font-size: 0.75em; color: #9CA3AF; margin-top: 4px;">{{ message.dateCreated|datetime('short') }}</div>
                     </div>
                 {% endfor %}
             </div>

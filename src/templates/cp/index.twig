@@ -1,8 +1,52 @@
 {% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
 
 {% set title = "Conversations"|t('craft-chat') %}
 
 {% block content %}
+    <form method="get" accept-charset="UTF-8" style="background: #fdfdfd; padding: 20px; border: 1px solid #e2e2e8; border-radius: 4px; margin-bottom: 24px;">
+        <input type="hidden" name="p" value="admin/craft-chat">
+        
+        <div class="flex" style="gap: 16px; align-items: flex-end;">
+            <div style="flex: 1;">
+                {{ forms.textField({
+                    label: "Search Conversations",
+                    id: 'q',
+                    name: 'q',
+                    value: q ?? '',
+                    placeholder: "Keywords in summary or messages..."
+                }) }}
+            </div>
+            
+            <div>
+                {{ forms.textField({
+                    label: "Date From",
+                    type: "date",
+                    id: 'dateFrom',
+                    name: 'dateFrom',
+                    value: dateFrom ?? ''
+                }) }}
+            </div>
+            
+            <div>
+                {{ forms.textField({
+                    label: "Date To",
+                    type: "date",
+                    id: 'dateTo',
+                    name: 'dateTo',
+                    value: dateTo ?? ''
+                }) }}
+            </div>
+
+            <div style="padding-bottom: 2px;">
+                <input type="submit" class="btn submit" value="Search">
+                {% if (q is defined and q) or (dateFrom is defined and dateFrom) or (dateTo is defined and dateTo) %}
+                    <a href="{{ url('admin/craft-chat') }}" class="btn">Clear</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
     {% if conversations|length %}
         <div class="tableview" dir="ltr">
             <table class="data fullwidth">

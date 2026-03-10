@@ -140,6 +140,9 @@ class ChatService extends Component
 
             $responseData = json_decode($response->getBody()->getContents(), true);
 
+            $totalPromptTokens = $responseData['usage']['prompt_tokens'] ?? 0;
+            $totalCompletionTokens = $responseData['usage']['completion_tokens'] ?? 0;
+
             $iterations = 0;
             $maxIterations = 3;
 
@@ -199,6 +202,10 @@ class ChatService extends Component
                 ]);
 
                 $responseData = json_decode($response->getBody()->getContents(), true);
+                if (isset($responseData['usage'])) {
+                    $totalPromptTokens += $responseData['usage']['prompt_tokens'] ?? 0;
+                    $totalCompletionTokens += $responseData['usage']['completion_tokens'] ?? 0;
+                }
             }
 
             $aiResponseText = $responseData['choices'][0]['message']['content'] ?? null;
@@ -213,8 +220,10 @@ class ChatService extends Component
             $aiMsgRecord->content = $aiResponseText;
             $aiMsgRecord->save();
 
-            // Update conversation count
+            // Update conversation count and tokens
             $conversation->messageCount += 2; // User + AI
+            $conversation->promptTokens = (int) $conversation->promptTokens + $totalPromptTokens;
+            $conversation->completionTokens = (int) $conversation->completionTokens + $totalCompletionTokens;
             $conversation->save();
 
             // Re-generate summary in background (queue)

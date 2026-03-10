@@ -74,6 +74,7 @@
                         <th scope="col">ID</th>
                         <th scope="col">Date</th>
                         <th scope="col">Messages</th>
+                        <th scope="col">Tokens Used</th>
                         <th scope="col">Summary</th>
                         <th scope="col">Status</th>
                     </tr>
@@ -84,6 +85,7 @@
                             <td><a href="{{ cpUrl('craft-chat/conversations/' ~ conversation.id) }}">{{ conversation.id }}</a></td>
                             <td>{{ conversation.dateUpdated|datetime('short') }}</td>
                             <td>{{ conversation.messageCount }}</td>
+                            <td>{{ (conversation.promptTokens + conversation.completionTokens)|number_format(0, '.', ',') }}</td>
                             <td>{{ conversation.summary ? conversation.summary : 'No summary yet' }}</td>
                             <td>{{ conversation.status }}</td>
                         </tr>

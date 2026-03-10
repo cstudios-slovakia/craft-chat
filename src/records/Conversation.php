@@ -10,6 +10,8 @@ use craft\db\ActiveRecord;
  * @property string|null $sessionId
  * @property string|null $summary
  * @property int $messageCount
+ * @property int $promptTokens
+ * @property int $completionTokens
  * @property string $status
  * @property string|null $ipAddress
  * @property string|null $location

@@ -40,6 +40,8 @@ class Install extends Migration
                 'sessionId' => $this->string()->null(),
                 'summary' => $this->text()->null(),
                 'messageCount' => $this->integer()->defaultValue(0),
+                'promptTokens' => $this->integer()->defaultValue(0),
+                'completionTokens' => $this->integer()->defaultValue(0),
                 'status' => $this->string()->defaultValue('active'), // active, closed
                 'ipAddress' => $this->string()->null(),
                 'location' => $this->string()->null(),

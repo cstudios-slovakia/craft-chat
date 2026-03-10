@@ -154,7 +154,10 @@ class ChatService extends Component
                 $responseData = json_decode($response->getBody()->getContents(), true);
             }
 
-            $aiResponseText = $responseData['choices'][0]['message']['content'] ?? "Sorry, I couldn't process that.";
+            $aiResponseText = $responseData['choices'][0]['message']['content'] ?? null;
+            if (!$aiResponseText) {
+                $aiResponseText = "Sorry, I couldn't process that. Details: " . json_encode($responseData);
+            }
 
             // Save AI Message
             $aiMsgRecord = new Message();
@@ -173,9 +176,13 @@ class ChatService extends Component
             ]));
 
             return $aiResponseText;
-        } catch (\Exception $e) {
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : $e->getMessage();
+            Craft::error("OpenAI API Request Error: " . $errorBody, __METHOD__);
+            return "API Error: " . $errorBody;
+        } catch (\Throwable $e) {
             Craft::error("OpenAI API Error: " . $e->getMessage(), __METHOD__);
-            return "Sorry, there was an error communicating with the AI. " . $e->getMessage();
+            return "System Error: " . $e->getMessage() . " on line " . $e->getLine();
         }
     }
 

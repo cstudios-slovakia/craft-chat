@@ -82,7 +82,7 @@ class Plugin extends BasePlugin
         return new Settings();
     }
 
-    protected function settingsHtml(): string
+    public function getSettingsResponse(): mixed
     {
         $sections = Craft::$app->getEntries()->getAllSections();
         $sectionOptions = [];
@@ -90,9 +90,10 @@ class Plugin extends BasePlugin
             $sectionOptions[] = ['label' => $section->name, 'value' => $section->handle];
         }
 
-        return Craft::$app->view->renderTemplate(
-            'craft-chat/settings',
+        return Craft::$app->controller->renderTemplate(
+            'craft-chat/settings-full',
             [
+                'plugin' => $this,
                 'settings' => $this->getSettings(),
                 'sectionOptions' => $sectionOptions
             ]

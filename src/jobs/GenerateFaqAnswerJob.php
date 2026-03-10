@@ -29,12 +29,21 @@ class GenerateFaqAnswerJob extends BaseJob
 
         $client = Craft::createGuzzleClient();
 
-        // Use a background prompt to try and synthesize an answer, or at least structure the question for human review.
-        $systemContent = "You are an expert internal knowledge base editor. A user asked a question that the tier-1 support bot could not answer. Your job is to draft a helpful answer if you can infer one based on general knowledge, or draft a placeholder template for the human admin to fill out. Keep it concise, helpful, and professional.";
+        // Search website for relevant content to feed the AI as context
+        $chatService = Plugin::getInstance()->chat;
+        $contextEntries = $chatService->searchWebsite($faq->question);
+
+        $contextText = "";
+        foreach ($contextEntries as $entry) {
+            $contextText .= "--- Page: {$entry['title']} ({$entry['url']}) ---\n";
+            $contextText .= $entry['content'] . "\n\n";
+        }
+
+        $systemContent = "You are an expert internal knowledge base editor. A user asked a question that the tier-1 support bot could not answer. Your job is to draft a helpful answer BASED ONLY ON THE PROVIDED CONTEXT from our website. If the context does not contain the answer, draft a placeholder template for the human admin to fill out and state that no clear answer was found on the site. Keep it concise, helpful, and professional.";
 
         $messagesPayload = [
             ['role' => 'system', 'content' => $systemContent],
-            ['role' => 'user', 'content' => "Draft an official FAQ answer for this user question: " . $faq->question]
+            ['role' => 'user', 'content' => "CONTEXT FROM WEBSITE:\n\n" . ($contextText ?: "No relevant content found on the website.") . "\n\nUSER QUESTION: " . $faq->question . "\n\nDraft the FAQ answer:"]
         ];
 
         try {

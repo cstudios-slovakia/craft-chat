@@ -259,25 +259,7 @@ class ChatService extends Component
                         $args = json_decode($toolCall['function']['arguments'], true);
                         $query = $args['query'] ?? '';
 
-                        Craft::info("Craft Chat Tool: search_website query='{$query}'", __METHOD__);
-
-                        // Use fuzzy searching by wrapping with asterisks
-                        $searchQuery = '*' . trim($query) . '*';
-
-                        $entries = \craft\elements\Entry::find()
-                            ->section($searchSections)
-                            ->search($searchQuery)
-                            ->limit(3)
-                            ->all();
-
-                        $searchResults = [];
-                        foreach ($entries as $entry) {
-                            $searchResults[] = [
-                                'title' => $entry->title,
-                                'url' => $entry->getUrl(),
-                                'content' => $this->extractTextFromElement($entry)
-                            ];
-                        }
+                        $searchResults = $this->searchWebsite($query);
 
                         $messagesPayload[] = [
                             'role' => 'tool',
@@ -379,7 +361,38 @@ class ChatService extends Component
         }
     }
 
-    protected function extractTextFromElement($element, int $depth = 0): string
+    public function searchWebsite(string $query): array
+    {
+        $settings = $this->getSettings();
+        $searchSections = $settings->searchSections ?? [];
+        if (!is_array($searchSections)) {
+            $searchSections = !empty($searchSections) ? explode(',', $searchSections) : [];
+        }
+
+        Craft::info("Craft Chat Tool: search_website query='{$query}'", __METHOD__);
+
+        // Use fuzzy searching by wrapping with asterisks
+        $searchQuery = '*' . trim($query) . '*';
+
+        $entries = \craft\elements\Entry::find()
+            ->section($searchSections)
+            ->search($searchQuery)
+            ->limit(3)
+            ->all();
+
+        $searchResults = [];
+        foreach ($entries as $entry) {
+            $searchResults[] = [
+                'title' => $entry->title,
+                'url' => $entry->getUrl(),
+                'content' => $this->extractTextFromElement($entry)
+            ];
+        }
+
+        return $searchResults;
+    }
+
+    public function extractTextFromElement($element, int $depth = 0): string
     {
         if ($depth > 2 || !$element) {
             return '';
@@ -387,8 +400,6 @@ class ChatService extends Component
 
         $text = '';
         try {
-            // In Craft 4/5, elements behave like arrays/models for their custom fields.
-            // We can iterate over the field layout to get all field handles.
             $fieldLayout = $element->getFieldLayout();
             if ($fieldLayout) {
                 $customFields = $fieldLayout->getCustomFields();

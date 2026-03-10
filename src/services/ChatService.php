@@ -44,9 +44,10 @@ class ChatService extends Component
             ];
 
         } catch (\GuzzleHttp\Exception\RequestException $e) {
-            return ['status' => 'error', 'message' => 'Credits hidden or restricted.'];
+            $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : $e->getMessage();
+            return ['status' => 'error', 'message' => 'API Error: ' . $errorBody];
         } catch (\Throwable $e) {
-            return ['status' => 'error', 'message' => 'Failed to fetch credits.'];
+            return ['status' => 'error', 'message' => 'System Error: ' . $e->getMessage()];
         }
     }
 

@@ -10,9 +10,4 @@ class CraftChatVariable
     {
         return Plugin::getInstance()->getSettings();
     }
-
-    public function getAvailableCredits(): array
-    {
-        return Plugin::getInstance()->chat->getAvailableCredits();
-    }
 }

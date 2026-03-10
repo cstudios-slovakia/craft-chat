@@ -16,6 +16,40 @@ class ChatService extends Component
         return Plugin::getInstance()->getSettings();
     }
 
+    public function getAvailableCredits(): array
+    {
+        $settings = $this->getSettings();
+        $apiKey = Craft::parseEnv($settings->openaiApiKey);
+
+        if (empty($apiKey)) {
+            return ['status' => 'info', 'message' => 'No API Key configured.'];
+        }
+
+        $client = Craft::createGuzzleClient();
+
+        try {
+            $response = $client->get('https://api.openai.com/dashboard/billing/credit_grants', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $apiKey,
+                ],
+                'timeout' => 5,
+            ]);
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            $totalAvailable = $responseData['total_available'] ?? 0;
+
+            return [
+                'status' => 'success',
+                'available' => floatval($totalAvailable),
+            ];
+
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            return ['status' => 'error', 'message' => 'Credits hidden or restricted.'];
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => 'Failed to fetch credits.'];
+        }
+    }
+
     public function generateResponse(string $userMessage, int $conversationId): string
     {
         $settings = $this->getSettings();

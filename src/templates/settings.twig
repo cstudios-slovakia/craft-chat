@@ -30,6 +30,7 @@
     api: { label: "Key & Model"|t('craft-chat') }
 } %}
 
+{% namespace 'settings' %}
 <div class="chat-plugin-settings-wrapper" x-data="{
     activeTab: 'personalisation',
     botName: '{{ settings.botName|escape('js') }}',
@@ -91,11 +92,20 @@
                     inputAttributes: { 'x-model': 'chatSide' }
                 }) }}
 
-                {{ forms.textField({
+                {{ forms.selectField({
                     label: "Default Language"|t('craft-chat'),
-                    instructions: "Two-letter language code (e.g. en, sk)."|t('craft-chat'),
+                    instructions: "Primary language of the chatbot."|t('craft-chat'),
                     id: 'defaultLanguage',
                     name: 'defaultLanguage',
+                    options: [
+                        { label: 'English', value: 'en' },
+                        { label: 'Slovak (Slovenčina)', value: 'sk' },
+                        { label: 'Czech (Čeština)', value: 'cs' },
+                        { label: 'German (Deutsch)', value: 'de' },
+                        { label: 'Spanish (Español)', value: 'es' },
+                        { label: 'French (Français)', value: 'fr' },
+                        { label: 'Italian (Italiano)', value: 'it' }
+                    ],
                     value: settings.defaultLanguage,
                 }) }}
 
@@ -236,5 +246,6 @@
         }) }}
     </div>
 </div>
+{% endnamespace %}
 
 

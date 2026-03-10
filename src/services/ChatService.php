@@ -104,10 +104,19 @@ class ChatService extends Component
             ]);
 
             $responseData = json_decode($response->getBody()->getContents(), true);
-            $messageBlock = $responseData['choices'][0]['message'] ?? [];
 
-            // Execute Tool Calls if AI wants to search
-            if (!empty($messageBlock['tool_calls'])) {
+            $iterations = 0;
+            $maxIterations = 3;
+
+            // Execute Tool Calls if AI wants to search, support recursive calls
+            while ($iterations < $maxIterations) {
+                $messageBlock = $responseData['choices'][0]['message'] ?? [];
+
+                if (empty($messageBlock['tool_calls'])) {
+                    break;
+                }
+
+                $iterations++;
                 $messagesPayload[] = $messageBlock; // append assistant tool call request
 
                 foreach ($messageBlock['tool_calls'] as $toolCall) {
@@ -117,9 +126,12 @@ class ChatService extends Component
 
                         Craft::info("Craft Chat Tool: search_website query='{$query}'", __METHOD__);
 
+                        // Use fuzzy searching by wrapping with asterisks
+                        $searchQuery = '*' . trim($query) . '*';
+
                         $entries = \craft\elements\Entry::find()
                             ->section($searchSections)
-                            ->search($query)
+                            ->search($searchQuery)
                             ->limit(3)
                             ->all();
 
@@ -136,12 +148,12 @@ class ChatService extends Component
                             'role' => 'tool',
                             'tool_call_id' => $toolCall['id'],
                             'name' => 'search_website',
-                            'content' => empty($searchResults) ? 'No results found. Try broader synonyms.' : json_encode($searchResults)
+                            'content' => empty($searchResults) ? "No results found for '{$query}'. Try different keywords." : json_encode($searchResults)
                         ];
                     }
                 }
 
-                // Second API call with tool results
+                // Call API again with tool results
                 $payload['messages'] = $messagesPayload;
                 $response = $client->post('https://api.openai.com/v1/chat/completions', [
                     'headers' => [

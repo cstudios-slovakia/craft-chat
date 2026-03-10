@@ -181,22 +181,31 @@ class ChatService extends Component
 
     protected function extractTextFromElement($element, int $depth = 0): string
     {
-        if ($depth > 2 || !$element || !method_exists($element, 'getFieldValues')) {
+        if ($depth > 2 || !$element) {
             return '';
         }
 
         $text = '';
         try {
-            foreach ($element->getFieldValues() as $fieldValue) {
-                if (is_string($fieldValue) || (is_object($fieldValue) && method_exists($fieldValue, '__toString'))) {
-                    $val = trim(strip_tags((string) $fieldValue));
-                    if (!empty($val)) {
-                        $text .= $val . " \n";
-                    }
-                } elseif ($fieldValue instanceof \craft\elements\db\ElementQuery) {
-                    $relatedElements = (clone $fieldValue)->limit(5)->all();
-                    foreach ($relatedElements as $relatedElement) {
-                        $text .= $this->extractTextFromElement($relatedElement, $depth + 1) . " \n";
+            // In Craft 4/5, elements behave like arrays/models for their custom fields.
+            // We can iterate over the field layout to get all field handles.
+            $fieldLayout = $element->getFieldLayout();
+            if ($fieldLayout) {
+                $customFields = $fieldLayout->getCustomFields();
+                foreach ($customFields as $field) {
+                    $handle = $field->handle;
+                    $fieldValue = $element->$handle ?? null;
+
+                    if (is_string($fieldValue) || (is_object($fieldValue) && method_exists($fieldValue, '__toString'))) {
+                        $val = trim(strip_tags((string) $fieldValue));
+                        if (!empty($val)) {
+                            $text .= $val . " \n";
+                        }
+                    } elseif ($fieldValue instanceof \craft\elements\db\ElementQuery) {
+                        $relatedElements = (clone $fieldValue)->limit(5)->all();
+                        foreach ($relatedElements as $relatedElement) {
+                            $text .= $this->extractTextFromElement($relatedElement, $depth + 1) . " \n";
+                        }
                     }
                 }
             }

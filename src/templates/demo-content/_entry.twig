@@ -1,0 +1,15 @@
+{% extends "_layouts/html" %}
+
+{% block content %}
+    <main style="max-width: 800px; margin: 40px auto; padding: 20px; font-family: sans-serif;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 20px;">{{ entry.title }}</h1>
+        
+        <div class="entry-content" style="line-height: 1.6; font-size: 1.1rem; color: #333;">
+            {% if entry.textField is defined and entry.textField %}
+                {{ entry.textField }}
+            {% else %}
+                <p>No text content available.</p>
+            {% endif %}
+        </div>
+    </main>
+{% endblock %}

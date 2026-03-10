@@ -74,7 +74,7 @@ class ChatService extends Component
         $userMsgRecord->content = $userMessage;
         $userMsgRecord->save();
 
-        $systemContent = trim($settings->initialInstructions) . "\n\nIf you need specific information, use the search_faqs tool FIRST. If you cannot find the answer there, use the search_website tool to find content on the site. If you STILL cannot find the answer in the FAQ or Website, you MUST use the log_unanswered_question tool passing the user's exact question, and then kindly tell the user you don't know the answer. DO NOT use the log_unanswered_question tool if you found an answer in the FAQ, even if that answer states that you cannot help the user or do not offer the service.";
+        $systemContent = trim($settings->initialInstructions) . "\n\nCRITICAL INSTRUCTIONS:\n1. When asked a question, ALWAYS use the `search_faqs` tool first to check the Knowledge Base.\n2. If `search_faqs` returns a verified answer, you MUST reply with that exact answer directly to the user.\n3. If `search_faqs` returns no answer, use `search_website`.\n4. If both tools fail to find an answer, call the `log_unanswered_question` tool with the user's question, and then reply apologizing that you do not know the answer.";
 
         // Build Payload
         $messagesPayload = [

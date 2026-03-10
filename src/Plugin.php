@@ -22,6 +22,7 @@ use Cstudios\CraftChat\variables\CraftChatVariable;
 class Plugin extends BasePlugin
 {
     public string $schemaVersion = '1.0.1';
+    public string $version = '1.0.0';
     public bool $hasCpSettings = true;
     public bool $hasCpSection = true;
 

@@ -1,6 +1,7 @@
 {
   "name": "cstudios/craft-chat",
   "description": "OpenAI-powered chatbot for Craft CMS 5",
+  "version": "1.0.0",
   "type": "craft-plugin",
   "require": {
     "craftcms/cms": "^5.0.0",

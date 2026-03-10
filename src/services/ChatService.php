@@ -39,9 +39,11 @@ class ChatService extends Component
         $userMsgRecord->content = $userMessage;
         $userMsgRecord->save();
 
+        $systemContent = trim($settings->initialInstructions) . "\n\nIf you need specific information, use the search_website tool to find content and cite the source URLs provided in your answer.";
+
         // Build Payload
         $messagesPayload = [
-            ['role' => 'system', 'content' => $settings->initialInstructions]
+            ['role' => 'system', 'content' => $systemContent]
         ];
 
         // Fetch last 10 messages for context
@@ -58,6 +60,38 @@ class ChatService extends Component
             ];
         }
 
+        $payload = [
+            'model' => $model,
+            'messages' => $messagesPayload,
+        ];
+
+        $searchSections = $settings->searchSections;
+        if (is_string($searchSections)) {
+            $searchSections = json_decode($searchSections, true) ?: [];
+        }
+
+        if (!empty($searchSections)) {
+            $payload['tools'] = [
+                [
+                    'type' => 'function',
+                    'function' => [
+                        'name' => 'search_website',
+                        'description' => 'Search the website content for specific keywords if you need information to answer the user\'s query. If you don\'t find results, try searching with synonyms or simpler keywords.',
+                        'parameters' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'query' => [
+                                    'type' => 'string',
+                                    'description' => 'The keyword or phrase to search.'
+                                ]
+                            ],
+                            'required' => ['query']
+                        ]
+                    ]
+                ]
+            ];
+        }
+
         $client = Craft::createGuzzleClient();
 
         try {
@@ -66,13 +100,60 @@ class ChatService extends Component
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ],
-                'json' => [
-                    'model' => $model,
-                    'messages' => $messagesPayload,
-                ]
+                'json' => $payload
             ]);
 
             $responseData = json_decode($response->getBody()->getContents(), true);
+            $messageBlock = $responseData['choices'][0]['message'] ?? [];
+
+            // Execute Tool Calls if AI wants to search
+            if (!empty($messageBlock['tool_calls'])) {
+                $messagesPayload[] = $messageBlock; // append assistant tool call request
+
+                foreach ($messageBlock['tool_calls'] as $toolCall) {
+                    if ($toolCall['function']['name'] === 'search_website') {
+                        $args = json_decode($toolCall['function']['arguments'], true);
+                        $query = $args['query'] ?? '';
+
+                        Craft::info("Craft Chat Tool: search_website query='{$query}'", __METHOD__);
+
+                        $entries = \craft\elements\Entry::find()
+                            ->section($searchSections)
+                            ->search($query)
+                            ->limit(3)
+                            ->all();
+
+                        $searchResults = [];
+                        foreach ($entries as $entry) {
+                            $searchResults[] = [
+                                'title' => $entry->title,
+                                'url' => $entry->getUrl(),
+                                'content' => $this->extractTextFromElement($entry)
+                            ];
+                        }
+
+                        $messagesPayload[] = [
+                            'role' => 'tool',
+                            'tool_call_id' => $toolCall['id'],
+                            'name' => 'search_website',
+                            'content' => empty($searchResults) ? 'No results found. Try broader synonyms.' : json_encode($searchResults)
+                        ];
+                    }
+                }
+
+                // Second API call with tool results
+                $payload['messages'] = $messagesPayload;
+                $response = $client->post('https://api.openai.com/v1/chat/completions', [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => $payload
+                ]);
+
+                $responseData = json_decode($response->getBody()->getContents(), true);
+            }
+
             $aiResponseText = $responseData['choices'][0]['message']['content'] ?? "Sorry, I couldn't process that.";
 
             // Save AI Message
@@ -96,5 +177,33 @@ class ChatService extends Component
             Craft::error("OpenAI API Error: " . $e->getMessage(), __METHOD__);
             return "Sorry, there was an error communicating with the AI. " . $e->getMessage();
         }
+    }
+
+    protected function extractTextFromElement($element, int $depth = 0): string
+    {
+        if ($depth > 2 || !$element || !method_exists($element, 'getFieldValues')) {
+            return '';
+        }
+
+        $text = '';
+        try {
+            foreach ($element->getFieldValues() as $fieldValue) {
+                if (is_string($fieldValue) || (is_object($fieldValue) && method_exists($fieldValue, '__toString'))) {
+                    $val = trim(strip_tags((string) $fieldValue));
+                    if (!empty($val)) {
+                        $text .= $val . " \n";
+                    }
+                } elseif ($fieldValue instanceof \craft\elements\db\ElementQuery) {
+                    $relatedElements = (clone $fieldValue)->limit(5)->all();
+                    foreach ($relatedElements as $relatedElement) {
+                        $text .= $this->extractTextFromElement($relatedElement, $depth + 1) . " \n";
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore errors for un-renderable formats
+        }
+
+        return mb_substr(trim(preg_replace('/\s+/', ' ', $text)), 0, 5000);
     }
 }

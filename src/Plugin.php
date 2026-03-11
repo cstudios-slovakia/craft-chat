@@ -109,11 +109,21 @@ class Plugin extends BasePlugin
             $sectionOptions[] = ['label' => $section->name, 'value' => $section->handle];
         }
 
+        $settings = $this->getSettings();
+        $searchEntriesElements = [];
+        if (!empty($settings->searchEntries)) {
+            $searchEntriesElements = \craft\elements\Entry::find()
+                ->id($settings->searchEntries)
+                ->status(null)
+                ->all();
+        }
+
         return Craft::$app->getView()->renderTemplate(
             'craft-chat/settings',
             [
-                'settings' => $this->getSettings(),
-                'sectionOptions' => $sectionOptions
+                'settings' => $settings,
+                'sectionOptions' => $sectionOptions,
+                'searchEntriesElements' => $searchEntriesElements
             ]
         );
     }

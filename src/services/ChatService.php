@@ -369,16 +369,47 @@ class ChatService extends Component
             $searchSections = !empty($searchSections) ? explode(',', $searchSections) : [];
         }
 
+        $searchEntries = $settings->searchEntries ?? [];
+        if (!is_array($searchEntries)) {
+            $searchEntries = !empty($searchEntries) ? explode(',', $searchEntries) : [];
+        }
+
         Craft::info("Craft Chat Tool: search_website query='{$query}'", __METHOD__);
 
         // Use fuzzy searching by wrapping with asterisks
         $searchQuery = '*' . trim($query) . '*';
 
-        $entries = \craft\elements\Entry::find()
-            ->section($searchSections)
-            ->search($searchQuery)
-            ->limit(3)
-            ->all();
+        $entries = [];
+
+        // Search Sections
+        if (!empty($searchSections) || (empty($searchSections) && empty($searchEntries))) {
+            $sectionQuery = \craft\elements\Entry::find()
+                ->search($searchQuery)
+                ->limit(3);
+
+            if (!empty($searchSections)) {
+                $sectionQuery->section($searchSections);
+            }
+
+            foreach ($sectionQuery->all() as $e) {
+                $entries[$e->id] = $e;
+            }
+        }
+
+        // Search Specific Entries
+        if (!empty($searchEntries)) {
+            $specificQuery = \craft\elements\Entry::find()
+                ->search($searchQuery)
+                ->id($searchEntries)
+                ->limit(3);
+
+            foreach ($specificQuery->all() as $e) {
+                $entries[$e->id] = $e;
+            }
+        }
+
+        // Take top 4 combined
+        $entries = array_slice(array_values($entries), 0, 4);
 
         $searchResults = [];
         foreach ($entries as $entry) {

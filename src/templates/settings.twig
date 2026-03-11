@@ -218,6 +218,16 @@
             options: sectionOptions,
             values: settings.searchSections is iterable ? settings.searchSections : (settings.searchSections ? settings.searchSections|split(',') : []),
         }) }}
+
+        {{ forms.elementSelectField({
+            label: "Specific Entries to Search"|t('craft-chat'),
+            instructions: "Select individual entries where the bot can find the answer. The bot will search these entries in addition to any selected sections."|t('craft-chat'),
+            id: 'searchEntries',
+            name: 'searchEntries',
+            elementType: 'craft\\elements\\Entry',
+            elements: searchEntriesElements,
+            limit: null
+        }) }}
     </div>
 
     {# ---------------- TAB 3: KEY & MODEL ---------------- #}

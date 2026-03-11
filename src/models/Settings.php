@@ -10,6 +10,7 @@ class Settings extends Model
     public string $openaiModel = 'gpt-4o-mini';
     public string $initialInstructions = 'You are a helpful assistant on our website.';
     public array $searchSections = []; // sections to search for info
+    public array $searchEntries = []; // specific entries to search
     public string $chatSide = 'right'; // 'left' or 'right'
     public string $defaultLanguage = 'en';
     public string $botName = 'CraftBot';
@@ -32,7 +33,7 @@ class Settings extends Model
     {
         return [
             [['openaiApiKey', 'openaiModel', 'botName', 'welcomeMessage', 'chatSide', 'defaultLanguage', 'colorChatBubbleAI', 'colorChatBubbleUser', 'colorBackground'], 'string'],
-            [['searchSections', 'feedSections', 'feedCategories'], 'safe'],
+            [['searchSections', 'searchEntries', 'feedSections', 'feedCategories'], 'safe'],
             [['maxMessagesPerMinute'], 'integer', 'min' => 1],
         ];
     }

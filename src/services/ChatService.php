@@ -240,11 +240,22 @@ class ChatService extends Component
                             ->limit(3)
                             ->all();
 
-                        $searchResults = [];
+                        $faqAnswers = [];
                         foreach ($faqRecords as $faq) {
-                            $searchResults[] = [
+                            $answerText = $faq->answer;
+
+                            // If a specific entry is linked, use its rich content instead of the manual answer
+                            $linkedEntry = $faq->getLinkedEntryElement();
+                            if ($linkedEntry) {
+                                $entryContent = $this->extractTextFromElement($linkedEntry);
+                                if (!empty($entryContent)) {
+                                    $answerText = "ANSWER FOUND IN LINKED ENTRY (Title: {$linkedEntry->title}):\n" . $entryContent;
+                                }
+                            }
+
+                            $faqAnswers[] = [
                                 'question' => $faq->question,
-                                'answer' => $faq->answer
+                                'answer' => $answerText
                             ];
                         }
 

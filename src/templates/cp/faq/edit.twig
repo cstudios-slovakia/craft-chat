@@ -25,9 +25,26 @@
         rows: 2
     }) }}
 
+    {% set linkedEntryElements = [] %}
+    {% if faq.linkedEntryId %}
+        {% set linkedEntryElements = craft.entries.id(faq.linkedEntryId).all() %}
+    {% endif %}
+
+    {{ forms.elementSelectField({
+        label: "Linked Entry (Optional)"|t('craft-chat'),
+        instructions: "Link this FAQ to a specific entry (like a service or about page). If selected, the bot will pull its answer directly from this entry's content whenever this question is asked. This overrides any manual answer provided below."|t('craft-chat'),
+        id: 'linkedEntryId',
+        name: 'linkedEntryId',
+        elementType: 'craft\\elements\\Entry',
+        elements: linkedEntryElements,
+        limit: 1
+    }) }}
+
+    <hr style="margin: 20px 0;">
+
     {{ forms.textareaField({
-        label: "Answer"|t('craft-chat'),
-        instructions: "Provide the official answer here. The bot will prioritize this answer over general website content."|t('craft-chat'),
+        label: "Manual Answer"|t('craft-chat'),
+        instructions: "Provide the official answer here. If a Linked Entry is provided above, this manual answer will be ignored."|t('craft-chat'),
         id: 'answer',
         name: 'answer',
         value: faq.answer,

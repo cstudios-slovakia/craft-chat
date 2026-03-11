@@ -67,6 +67,13 @@ class FaqController extends Controller
         $faq->question = $request->getBodyParam('question');
         $faq->answer = $request->getBodyParam('answer');
 
+        $linkedEntryIds = $request->getBodyParam('linkedEntryId');
+        if (is_array($linkedEntryIds) && !empty($linkedEntryIds)) {
+            $faq->linkedEntryId = (int) $linkedEntryIds[0];
+        } else {
+            $faq->linkedEntryId = null;
+        }
+
         // Optional logic: allow manually setting relevancyCounter
         $counter = $request->getBodyParam('relevancyCounter');
         if ($counter !== null) {

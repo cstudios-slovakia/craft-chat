@@ -242,6 +242,12 @@
             required: true,
         }) }}
 
+        <div style="margin-top: -10px; margin-bottom: 24px;">
+            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="btn" style="border: 1px solid #e2e2e8;">
+                OpenAI Console &rarr;
+            </a>
+        </div>
+
         {{ forms.selectField({
             label: "OpenAI Model"|t('craft-chat'),
             instructions: "Which model to use for chat functionality."|t('craft-chat'),

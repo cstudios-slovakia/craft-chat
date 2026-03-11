@@ -32,7 +32,7 @@ class FaqController extends Controller
         if ($faqId) {
             $faq = Faq::findOne($faqId);
             if (!$faq) {
-                return $this->asNotFound('FAQ not found.');
+                throw new \yii\web\NotFoundHttpException('FAQ not found.');
             }
             $title = 'Edit FAQ';
         } else {
